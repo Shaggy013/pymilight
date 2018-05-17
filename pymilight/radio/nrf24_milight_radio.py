@@ -13,18 +13,6 @@ def get_packet_id(packet, packet_length):
     return (packet[1] << 8) | packet[packet_length - 1]
 
 
-class MiLightRadioConfig:
-    def __init__(self, syncword0, syncword3, packetLength, channel0, channel1, channel2):
-        self.syncword0 = syncword0
-        self.syncword3 = syncword3
-        self.packetLength = packetLength
-        self.channels = [
-            channel0,
-            channel1,
-            channel2,
-        ]
-
-
 class NRF24MiLightRadio(object):
     def __init__(self, rf, config):
         self._pl1167 = PL1167_nRF24(rf)
