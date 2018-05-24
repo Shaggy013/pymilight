@@ -28,6 +28,7 @@ class NRF24MiLightRadio(object):
         if retval < 0:
             return retval
 
+        LOGGER.debug('Configuring.')
         retval = self.configure()
         if retval < 0:
             return retval
@@ -67,9 +68,8 @@ class NRF24MiLightRadio(object):
 
         if self._pl1167.receive(self._config.channels[0]) > 0:
             LOGGER.info("NRF24MiLightRadio - received packet!")
-            packet_length = len(self._packet)
-            if self._pl1167.readFIFO(self._packet, packet_length) < 0:
-                return False
+            packet_length = self._config.packetLength + 1
+            self._packet = self._pl1167.readFIFO(packet_length)
 
             LOGGER.info("NRF24MiLightRadio - Checking packet length (expecting %d, is %d)", self._packet[0] + 1, packet_length)
             if packet_length == 0 or packet_length != self._packet[0] + 1:
@@ -95,15 +95,12 @@ class NRF24MiLightRadio(object):
         if frame_length > self._packet[0]:
             frame_length = self._packet[0]
 
-        frame = self._packet[frame_length + 1]
+        frame = self._packet[1:frame_length + 1]
         self._waiting = False
 
         return frame
 
     def write(self, frame):
-        if len(frame) > len(self._out_packet) - 1:
-            return -1
-
         self._out_packet = [len(frame)] + frame
 
         retval = self.resend()
@@ -113,6 +110,6 @@ class NRF24MiLightRadio(object):
 
     def resend(self):
         for channel in self._config.channels:
-            self._pl1167.writeFIFO(self._out_packet, self._out_packet[0] + 1)
+            self._pl1167.writeFIFO(self._out_packet)
             self._pl1167.transmit(channel)
         return 0
