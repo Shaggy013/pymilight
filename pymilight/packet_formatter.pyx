@@ -37,6 +37,7 @@ cdef extern from "RgbCctPacketFormatter.h":
         void nextMode()
         void previousMode()
         void reset()
+        void prepare(unsigned short device_id, unsigned char group_id)
         void format(const unsigned char *packet, char* buffer)
         unsigned long getPacketLength() const
         PacketStream &buildPackets()
@@ -67,10 +68,12 @@ cdef class PyRgbCctPacketFormatter:
         return self._data()
 
     def on(self):
+        self.c_formatter.prepare(0x02, 1)
         self.c_formatter.updateStatus(MiLightStatus.ON, 1)
         return self._data()
 
     def off(self):
+        self.c_formatter.prepare(0x02, 1)
         self.c_formatter.updateStatus(MiLightStatus.OFF, 1)
         return self._data()
 
