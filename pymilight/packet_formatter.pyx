@@ -1,8 +1,10 @@
 # distutils: language=c++
-# distutils: sources = src/MiLight/PacketFormatter.cpp src/MiLight/RgbCctPacketFormatter.cpp src/MiLight/V2RFEncoding.cpp src/MiLight/V2PacketFormatter.cpp src/compat/Arduino.cpp
+# distutils: sources = src/MiLight/utils.cpp src/MiLight/PacketFormatter.cpp src/MiLight/RgbCctPacketFormatter.cpp src/MiLight/V2RFEncoding.cpp src/MiLight/V2PacketFormatter.cpp src/MiLight/GroupState.cpp src/compat/Arduino.cpp
 from cython.operator import dereference
 from libcpp cimport bool
+from libcpp.string cimport string
 from libc.stdio cimport sprintf
+import json
 
 cdef extern from "MiLightConstants.h":
     cdef enum MiLightStatus:
@@ -41,6 +43,9 @@ cdef extern from "RgbCctPacketFormatter.h":
         void format(const unsigned char *packet, char* buffer)
         unsigned long getPacketLength() const
         PacketStream &buildPackets()
+
+cdef extern from "utils.h":
+    cdef string ParsePacket(RgbCctPacketFormatter formatter, unsigned char *packet)
 
 cdef class PyPacketStream:
     cdef PacketStream *c_stream
@@ -99,3 +104,9 @@ cdef class PyRgbCctPacketFormatter:
         stream = self.c_formatter.buildPackets()
         self.c_formatter.format(stream.packetStream, responseBuffer)
         return (<bytes>response).decode('ascii')
+
+    def json(self, bytearray packet):
+        cdef unsigned char *packet_array = packet;
+        cdef string raw_json;
+        raw_json = ParsePacket(self.c_formatter, packet);
+        return json.loads(raw_json.decode('utf-8'))

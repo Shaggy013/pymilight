@@ -5,7 +5,7 @@ from Cython.Build import cythonize
 extensions = [
     Extension(
         "pymilight.packet_formatter", ["pymilight/packet_formatter.pyx"],
-        include_dirs = ["include", "src/compat"],
+        include_dirs = ["include", "vendor", "src/compat"],
     )
 ]
 

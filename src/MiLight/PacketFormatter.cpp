@@ -15,7 +15,6 @@ bool PacketStream::hasNext() {
 
 uint8_t* PacketStream::next() {
   uint8_t* packet = packetStream + (currentPacket * packetLength);
-  printf("%c", *packet);
   currentPacket++;
   return packet;
 }
@@ -64,6 +63,10 @@ void PacketFormatter::enableNightMode() { }
 
 void PacketFormatter::updateTemperature(uint8_t value) { }
 void PacketFormatter::updateSaturation(uint8_t value) { }
+
+BulbId PacketFormatter::parsePacket(const uint8_t *packet, JsonObject &result, GroupStateStore* stateStore) {
+  return DEFAULT_BULB_ID;
+}
 
 void PacketFormatter::pair() {
   for (size_t i = 0; i < 5; i++) {
