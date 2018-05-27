@@ -82,6 +82,17 @@ cdef class PyRgbCctPacketFormatter:
         self.c_formatter.updateStatus(MiLightStatus.OFF, 1)
         return self._data()
 
+    def update_status(self, bool status, int group_id):
+        cdef MiLightStatus milight_status
+        if status:
+            milight_status = MiLightStatus.ON
+        else:
+            milight_status = MiLightStatus.OFF
+        self.c_formatter.updateStatus(milight_status, group_id)
+
+    def prepare(self, int device_id, int group_id):
+        self.c_formatter.prepare(device_id, group_id)
+
     def _data(self, reset=True):
         cdef PacketStream stream
         stream = self.c_formatter.buildPackets()

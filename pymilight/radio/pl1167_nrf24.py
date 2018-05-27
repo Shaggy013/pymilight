@@ -86,6 +86,7 @@ class PL1167_nRF24(object):
             reverse_bits(last_byte),
         ]
 
+        LOGGER.debug("Setting read/write pipes: 0x%s", bytearray(self._nrf_pipe).hex())
         self._radio.openWritingPipe(bytes(self._nrf_pipe))
         self._radio.openReadingPipe(1, bytes(self._nrf_pipe))
 

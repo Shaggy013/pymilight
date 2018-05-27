@@ -101,7 +101,7 @@ class NRF24MiLightRadio(object):
         return frame
 
     def write(self, frame):
-        self._out_packet = [len(frame)] + frame
+        self._out_packet = bytearray([len(frame)]) + frame
 
         retval = self.resend()
         if retval < 0:
