@@ -1,4 +1,4 @@
-pymilight/*.cpp
+pymilight/packet_formatter/*.cpp
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
