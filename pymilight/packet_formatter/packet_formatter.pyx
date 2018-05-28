@@ -38,6 +38,9 @@ cdef PyPacketStream create(C_PacketStream* stream):
 cdef class PyPacketFormatter:
     cdef PacketFormatter *c_pf_obj;
 
+    def reset(self):
+        self.c_pf_obj[0].reset()
+
     def prepare(self, int device_id, int group_id):
         self.c_pf_obj[0].prepare(device_id, group_id)
 
@@ -62,24 +65,90 @@ cdef class PyPacketFormatter:
         cdef PacketStream stream
         stream = self.c_pf_obj[0].buildPackets()
         self.c_pf_obj[0].format(stream.packetStream, responseBuffer)
+        self.reset()
         return (<bytes>response).decode('ascii')
 
-    def json(self, bytearray packet):
+    def parse(self, bytearray packet):
         cdef unsigned char *packet_array = packet;
         cdef string raw_json;
         raw_json = ParsePacket(self.c_pf_obj[0], packet);
         return json.loads(raw_json.decode('utf-8'))
 
-    def update_color_white(self):
-        self.c_pf_obj[0].updateColorWhite()
+    def command(self, int command, int arg):
+        self.c_pf_obj[0].command(command, arg)
 
-    def update_status(self, bool status, int group_id):
+    def set_held(self, bool is_held):
+        self.c_pf_obj[0].setHeld(is_held)
+
+    # Status
+    def update_status(self, bool status, int group_id=-1):
         cdef MiLightStatus milight_status
         if status:
             milight_status = MiLightStatus.ON
         else:
             milight_status = MiLightStatus.OFF
-        self.c_pf_obj[0].updateStatus(milight_status, group_id)
+        if group_id >= 0:
+            self.c_pf_obj[0].updateStatus(milight_status, group_id)
+        else:
+            self.c_pf_obj[0].updateStatus(milight_status)
+
+    def pair(self):
+        self.c_pf_obj[0].pair()
+
+    def unpair(self):
+        self.c_pf_obj[0].unpair()
+
+    # Mode
+    def update_mode(self, int value):
+        self.c_pf_obj[0].updateMode(value)
+
+    def mode_speed_down(self):
+        self.c_pf_obj[0].modeSpeedDown()
+
+    def mode_speed_up(self):
+        self.c_pf_obj[0].modeSpeedUp()
+
+    def next_mode(self):
+        self.c_pf_obj[0].nextMode()
+
+    def previous_mode(self):
+        self.c_pf_obj[0].previousMode()
+
+    # Color
+    def update_hue(self, int value):
+        self.c_pf_obj[0].updateHue(value)
+
+    def update_color_raw(self, int value):
+        self.c_pf_obj[0].updateColorRaw(value)
+
+    def update_color_white(self):
+        self.c_pf_obj[0].updateColorWhite()
+
+    def update_saturation(self, int value):
+        self.c_pf_obj[0].updateSaturation(value)
+
+    # White temperature
+    def increase_temperature(self):
+        self.c_pf_obj[0].increaseTemperature()
+
+    def decrease_temperature(self):
+        self.c_pf_obj[0].decreaseTemperature()
+
+    def update_temperature(self, int value):
+        self.c_pf_obj[0].updateTemperature(value)
+
+    # Brightness
+    def update_brightness(self, int value):
+        self.c_pf_obj[0].updateBrightness(value)
+
+    def increase_brightness(self):
+        self.c_pf_obj[0].increaseBrightness()
+
+    def decrease_brightness(self):
+        self.c_pf_obj[0].decreaseBrightness()
+
+    def enable_night_mode(self):
+        self.c_pf_obj[0].enableNightMode()
 
 
 cdef class PyV2PacketFormatter(PyPacketFormatter):
