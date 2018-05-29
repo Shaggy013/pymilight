@@ -14,10 +14,29 @@ from pymilight.packet_formatter import PyRgbCctPacketFormatter
 LOGGER = logging.getLogger(__name__)
 ON = True
 OFF = False
+# MiLight CCT bulbs range from 2700K-6500K, or ~370.3-153.8 mireds.
+COLOR_TEMP_MAX_MIREDS = 370
+COLOR_TEMP_MIN_MIREDS = 153
 
 
 def constrain(val, min_val, max_val):
     return min(max_val, max(min_val, val))
+
+
+def rgb_to_hsv(red, green, blue):
+    return 1, 1
+
+
+def rescale(val, new_max, old_max):
+    return round(value * (new_max / float(old_max)))
+
+
+def mireds_to_white_val(mireds, max_val=255):
+    return rescale(
+        constrain(mireds, COLOR_TEMP_MIN_MIREDS, COLOR_TEMP_MAX_MIREDS) - COLOR_TEMP_MIN_MIREDS,
+        max_val,
+        (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS)
+    )
 
 
 class MiLightController(Thread):
@@ -79,21 +98,21 @@ class MiLightController(Thread):
         """TODO
         bool MiLightClient::available() {
           if (currentRadio == NULL) {
-            return false;
+            return false
           }
 
-          return currentRadio->available();
+          return currentRadio->available()
         }
 
         size_t MiLightClient::read(uint8_t packet[]) {
           if (currentRadio == NULL) {
-            return 0;
+            return 0
           }
 
-          size_t length;
-          currentRadio->read(packet, length);
+          size_t length
+          currentRadio->read(packet, length)
 
-          return length;
+          return length
         }
         """
         return None
@@ -148,250 +167,139 @@ class MiLightController(Thread):
         self.last_send = now
 
     def flush_packet(self):
-        packet = bytearray(self.radios[self.current_radio].formatter._data())
+        packet = self.radios[self.current_radio].formatter.data()
         self.update_resend_count()
         self.write(packet)
         #TODO currently _data() does this...
         #self.radios[self.current_radio].formatter.reset()
 
-    def update(self, msg):
-        print(msg)
-    """
-
-    void MiLightClient::setHeld(bool held) {
-      currentRemote->packetFormatter->setHeld(held);
-    }
-
-    void MiLightClient::updateColorRaw(const uint8_t color) {
-      currentRemote->packetFormatter->updateColorRaw(color);
-      flushPacket();
-    }
-
-    void MiLightClient::updateHue(const uint16_t hue) {
-      currentRemote->packetFormatter->updateHue(hue);
-      flushPacket();
-    }
-
-    void MiLightClient::updateBrightness(const uint8_t brightness) {
-      currentRemote->packetFormatter->updateBrightness(brightness);
-      flushPacket();
-    }
-
-    void MiLightClient::updateMode(uint8_t mode) {
-      currentRemote->packetFormatter->updateMode(mode);
-      flushPacket();
-    }
-
-    void MiLightClient::nextMode() {
-      currentRemote->packetFormatter->nextMode();
-      flushPacket();
-    }
-
-    void MiLightClient::previousMode() {
-      currentRemote->packetFormatter->previousMode();
-      flushPacket();
-    }
-
-    void MiLightClient::modeSpeedDown() {
-      currentRemote->packetFormatter->modeSpeedDown();
-      flushPacket();
-    }
-    void MiLightClient::modeSpeedUp() {
-      currentRemote->packetFormatter->modeSpeedUp();
-      flushPacket();
-    }
-    """
-
-    def update_status(self, status, group_id=1):
-        self.radios[self.current_radio].formatter.update_status(status, group_id)
-        self.flush_packet()
-
-    """
-    void MiLightClient::updateSaturation(const uint8_t value) {
-      currentRemote->packetFormatter->updateSaturation(value);
-      flushPacket();
-    }
-
-    void MiLightClient::updateColorWhite() {
-      currentRemote->packetFormatter->updateColorWhite();
-      flushPacket();
-    }
-
-    void MiLightClient::enableNightMode() {
-      currentRemote->packetFormatter->enableNightMode();
-      flushPacket();
-    }
-
-    void MiLightClient::pair() {
-      currentRemote->packetFormatter->pair();
-      flushPacket();
-    }
-
-    void MiLightClient::unpair() {
-      currentRemote->packetFormatter->unpair();
-      flushPacket();
-    }
-
-    void MiLightClient::increaseBrightness() {
-      currentRemote->packetFormatter->increaseBrightness();
-      flushPacket();
-    }
-
-    void MiLightClient::decreaseBrightness() {
-      currentRemote->packetFormatter->decreaseBrightness();
-      flushPacket();
-    }
-
-    void MiLightClient::increaseTemperature() {
-      currentRemote->packetFormatter->increaseTemperature();
-      flushPacket();
-    }
-
-    void MiLightClient::decreaseTemperature() {
-      currentRemote->packetFormatter->decreaseTemperature();
-      flushPacket();
-    }
-
-    void MiLightClient::updateTemperature(const uint8_t temperature) {
-      currentRemote->packetFormatter->updateTemperature(temperature);
-      flushPacket();
-    }
-
-    void MiLightClient::command(uint8_t command, uint8_t arg) {
-      currentRemote->packetFormatter->command(command, arg);
-      flushPacket();
-    }
-
-    """
     def update(self, request):
+        formatter = self.radios[self.current_radio].formatter
         parsed_status = self.parse_status(request)
 
         # Always turn on first
         if parsed_status == ON:
-            self.update_status(ON)
+            formatter.update_status(ON)
+            self.flush_packet()
 
-        """
-        if (request.containsKey("command")) {
-        this->handleCommand(request["command"]);
-        }
+        commands = []
+        if "command" in request:
+            commands = [request["command"]]
 
-        if (request.containsKey("commands")) {
-        JsonArray& commands = request["commands"];
+        if "commands" in request:
+            commands = request["commands"]
 
-        if (commands.success()) {
-          for (size_t i = 0; i < commands.size(); i++) {
-            this->handleCommand(commands.get<String>(i));
-          }
-        }
-        }
+        for command in commands:
+            self.handle_command(command)
 
-        //Homeassistant - Handle effect
-        if (request.containsKey("effect")) {
-        this->handleEffect(request["effect"]);
-        }
+        # /omeassistant - Handle effect
+        if "effect" in request:
+            self.handle_effect(request["effect"])
 
-        if (request.containsKey("hue")) {
-        this->updateHue(request["hue"]);
-        }
-        if (request.containsKey("saturation")) {
-        this->updateSaturation(request["saturation"]);
-        }
+        if "hue" in request:
+            formatter.update_hue(request["hue"])
+            self.flush_packet()
 
-        // Convert RGB to HSV
-        if (request.containsKey("color")) {
-        JsonObject& color = request["color"];
+        if "saturation" in request:
+            formatter.update_saturation(request["saturation"])
+            self.flush_packet()
 
-        uint8_t r = color["r"];
-        uint8_t g = color["g"];
-        uint8_t b = color["b"];
-        //If close to white
-        if( r > 256 - RGB_WHITE_BOUNDARY && g > 256 - RGB_WHITE_BOUNDARY && b > 256 - RGB_WHITE_BOUNDARY) {
-            this->updateColorWhite();
-        } else {
-          double hsv[3];
-          RGBConverter converter;
-          converter.rgbToHsv(r, g, b, hsv);
+        # Convert RGB to HSV
+        if "color" in request:
+            color = request["color"]
 
-          uint16_t hue = round(hsv[0]*360);
-          uint8_t saturation = round(hsv[1]*100);
+            red = color["r"]
+            green = color["g"]
+            blue = color["b"]
+            # If close to white
+            if red > 256 - self.RGB_WHITE_BOUNDARY and \
+               green > 256 - self.RGB_WHITE_BOUNDARY and \
+               blue > 256 - self.RGB_WHITE_BOUNDARY:
+                formatter.update_color_white()
+                self.flush_packet()
+            else:
+                hsv = rgb_to_hsv(red, green, blue)
 
-          this->updateHue(hue);
-          this->updateSaturation(saturation);
-        }
-        }
+                hue = int(round(hsv[0] * 360, 0))
+                saturation = int(round(hsv[1] * 100, 0))
 
-        if (request.containsKey("level")) {
-        this->updateBrightness(request["level"]);
-        }
-        // HomeAssistant
-        if (request.containsKey("brightness")) {
-        uint8_t scaledBrightness = Units::rescale(request.get<uint8_t>("brightness"), 100, 255);
-        this->updateBrightness(scaledBrightness);
-        }
+                formatter.update_hue(hue)
+                self.flush_packet()
+                formatter.update_saturation(saturation)
+                self.flush_packet()
 
-        if (request.containsKey("temperature")) {
-        this->updateTemperature(request["temperature"]);
-        }
-        // HomeAssistant
-        if (request.containsKey("color_temp")) {
-        this->updateTemperature(
-          Units::miredsToWhiteVal(request["color_temp"], 100)
-        );
-        }
+        if "level" in request:
+            formatter.update_brightness(request["level"])
+            self.flush_packet()
 
-        if (request.containsKey("mode")) {
-        this->updateMode(request["mode"]);
-        }
+        # HomeAssistant
+        if "brightness" in request:
+            scaled_brightness = rescale(int(request["brightness"]), 100, 255)
+            formatter.update_brightness(scaled_brightness)
+            self.flush_packet()
 
-        // Raw packet command/args
-        if (request.containsKey("button_id") && request.containsKey("argument")) {
-        this->command(request["button_id"], request["argument"]);
-        }
-        """
+        if "temperature" in request:
+            formatter.update_temperature(request["temperature"])
+            self.flush_packet()
+
+        # HomeAssistant
+        if "color_temp" in request:
+            formatter.update_temperature(
+                mireds_to_white_val(request["color_temp"], 100)
+            )
+            self.flush_packet()
+
+        if "mode" in request:
+            formatter.update_mode(request["mode"])
+            self.flush_packet()
+
+        # Raw packet command/args
+        if "button_id" in request and "argument" in request:
+            formatter.command(request["button_id"], request["argument"])
+            self.flush_packet()
 
         # Always turn off last
         if parsed_status == OFF:
-            self.update_status(OFF)
+            formatter.update_status(OFF)
+            self.flush_packet()
 
-    """
-    void MiLightClient::handleCommand(const String& command) {
-      if (command == "unpair") {
-        this->unpair();
-      } else if (command == "pair") {
-        this->pair();
-      } else if (command == "set_white") {
-        this->updateColorWhite();
-      } else if (command == "night_mode") {
-        this->enableNightMode();
-      } else if (command == "level_up") {
-        this->increaseBrightness();
-      } else if (command == "level_down") {
-        this->decreaseBrightness();
-      } else if (command == "temperature_up") {
-        this->increaseTemperature();
-      } else if (command == "temperature_down") {
-        this->decreaseTemperature();
-      } else if (command == "next_mode") {
-        this->nextMode();
-      } else if (command == "previous_mode") {
-        this->previousMode();
-      } else if (command == "mode_speed_down") {
-        this->modeSpeedDown();
-      } else if (command == "mode_speed_up") {
-        this->modeSpeedUp();
-      }
-    }
+    def handle_command(self, command):
+        formatter = self.radios[self.current_radio].formatter
+        if command == "unpair":
+            formatter.unpair()
+        elif command == "pair":
+            formatter.pair()
+        elif command == "set_white":
+            formatter.update_color_white()
+        elif command == "night_mode":
+            formatter.enable_night_mode()
+        elif command == "level_up":
+            formatter.increase_brightness()
+        elif command == "level_down":
+            formatter.decrease_brightness()
+        elif command == "temperature_up":
+            formatter.increase_temperature()
+        elif command == "temperature_down":
+            formatter.decrease_temperature()
+        elif command == "next_mode":
+            formatter.next_mode()
+        elif command == "previous_mode":
+            formatter.previous_mode()
+        elif command == "mode_speed_down":
+            formatter.mode_speed_down()
+        elif command == "mode_speed_up":
+            formatter.mode_speed_up()
+        self.flush_packet()
 
-    void MiLightClient::handleEffect(const String& effect) {
-      if (effect == "night_mode") {
-        this->enableNightMode();
-      } else if (effect == "white" || effect == "white_mode") {
-        this->updateColorWhite();
-      } else { // assume we're trying to set mode
-        this->updateMode(effect.toInt());
-      }
-    }
-    """
+    def handle_effect(self, effect):
+        formatter = self.radios[self.current_radio].formatter
+        if effect == "night_mode":
+            formatter.enable_night_mode()
+        elif effect == "white" or effect == "white_mode":
+            formatter.update_color_white()
+        else: # assume we're trying to set mode
+            formatter.update_mode(int(effect))
+        self.flush_packet()
 
     def parse_status(self, request):
         if "status" in request:
@@ -407,9 +315,7 @@ class MiLightController(Thread):
 
 
 if __name__ == '__main__':
-    import queue
     import threading
-    import logging
     logging.basicConfig(level=logging.DEBUG)
     inbound = queue.Queue()
     outbound = queue.Queue()
