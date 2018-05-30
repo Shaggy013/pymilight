@@ -162,18 +162,16 @@ class MiLightController(Thread):
         x = (since_last_send - self.throttle_threshold)
         delta = x * self.throttle_multiplier
 
-        self.current_resend_count = constrain(
+        self.current_resend_count = int(constrain(
             self.current_resend_count + delta,
             self.packet_repeat_minimum,
             self.base_resend_count
-        )
+        ))
         self.last_send = now
 
     def flush_packet(self, packet):
         self.update_resend_count()
         self.write(packet)
-        #TODO currently _data() does this...
-        #self.radios[self.current_radio].formatter.reset()
 
     def update(self, request):
         for packet in self.request_to_packets(request):
