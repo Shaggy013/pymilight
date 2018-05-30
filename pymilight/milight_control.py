@@ -9,7 +9,7 @@ import RF24
 
 from pymilight.radio import NRF24MiLightRadio, MiLightRadioConfig
 from pymilight.packet_formatter import PyRgbCctPacketFormatter
-
+from pymilight.rgb_converter import rgb_to_hsv
 
 LOGGER = logging.getLogger(__name__)
 ON = True
@@ -23,12 +23,8 @@ def constrain(val, min_val, max_val):
     return min(max_val, max(min_val, val))
 
 
-def rgb_to_hsv(red, green, blue):
-    return 1, 1
-
-
 def rescale(val, new_max, old_max):
-    return round(value * (new_max / float(old_max)))
+    return round(val * (new_max / float(old_max)))
 
 
 def mireds_to_white_val(mireds, max_val=255):

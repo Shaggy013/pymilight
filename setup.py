@@ -10,6 +10,11 @@ extensions = [
         ["pymilight/packet_formatter/packet_formatter.pyx"],
         include_dirs=include_dirs,
     ),
+    Extension(
+        "pymilight.rgb_converter",
+        ["pymilight/rgb_converter.pyx"],
+        include_dirs=include_dirs,
+    ),
 ]
 
 setup(

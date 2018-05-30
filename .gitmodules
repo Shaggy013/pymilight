@@ -1,0 +1,3 @@
+[submodule "vendor/RGBConverter"]
+	path = vendor/RGBConverter
+	url = https://github.com/ratkins/RGBConverter.git

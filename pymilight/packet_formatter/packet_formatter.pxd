@@ -4,6 +4,7 @@ from libcpp cimport bool
 ctypedef unsigned long size_t
 ctypedef unsigned char uint8_t
 ctypedef unsigned short uint16_t
+ctypedef unsigned char byte
 
 cdef extern from "MiLightConstants.h":
     cdef enum MiLightStatus:
