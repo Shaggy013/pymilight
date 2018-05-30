@@ -9,8 +9,8 @@
 
 typedef uint8_t byte;
 
-//#define min(a,b) ((a)<(b)?(a):(b))
-//#define max(a,b) ((a)>(b)?(a):(b))
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 //#define millis() (unsigned long)(((float)clock())/CLOCKS_PER_SEC / 1000)
@@ -46,6 +46,7 @@ typedef char __FlashStringHelper;
 
 class Stream {
     public:
+        size_t println(const char* val);
         size_t println(char* val);
         size_t println(unsigned int val);
         void begin(uint32_t baud);

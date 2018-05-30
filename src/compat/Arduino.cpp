@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+size_t Stream::println(const char* val){ }
 size_t Stream::println(char* val){ }
 
 size_t Stream::println(unsigned int val){}

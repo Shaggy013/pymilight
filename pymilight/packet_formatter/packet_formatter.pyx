@@ -69,9 +69,9 @@ cdef class PyPacketFormatter:
         return (<bytes>response).decode('ascii')
 
     def parse(self, bytearray packet):
-        cdef unsigned char *packet_array = packet;
-        cdef string raw_json;
-        raw_json = ParsePacket(self.c_pf_obj[0], packet);
+        cdef unsigned char *packet_array = packet
+        cdef string raw_json
+        raw_json = ParsePacket(self.c_pf_obj[0], packet)
         return json.loads(raw_json.decode('utf-8'))
 
     def command(self, int command, int arg):
