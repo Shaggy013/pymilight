@@ -162,21 +162,23 @@ class MiLightController(Thread):
         )
         self.last_send = now
 
-    def flush_packet(self):
-        packet = self.radios[self.current_radio].formatter.data()
+    def flush_packet(self, packet):
         self.update_resend_count()
         self.write(packet)
         #TODO currently _data() does this...
         #self.radios[self.current_radio].formatter.reset()
 
     def update(self, request):
+        for packet in self.request_to_packets(request):
+            self.flush_packet(packet)
+
+    def request_to_packets(self, request):
         formatter = self.radios[self.current_radio].formatter
         parsed_status = self.parse_status(request)
 
         # Always turn on first
         if parsed_status == ON:
-            formatter.update_status(ON)
-            self.flush_packet()
+            yield formatter.update_status(ON)
 
         commands = []
         if "command" in request:
@@ -186,19 +188,17 @@ class MiLightController(Thread):
             commands = request["commands"]
 
         for command in commands:
-            self.handle_command(command)
+            yield self.handle_command(command)
 
         # /omeassistant - Handle effect
         if "effect" in request:
-            self.handle_effect(request["effect"])
+            yield self.handle_effect(request["effect"])
 
         if "hue" in request:
-            formatter.update_hue(request["hue"])
-            self.flush_packet()
+            yield formatter.update_hue(request["hue"])
 
         if "saturation" in request:
-            formatter.update_saturation(request["saturation"])
-            self.flush_packet()
+            yield formatter.update_saturation(request["saturation"])
 
         # Convert RGB to HSV
         if "color" in request:
@@ -211,91 +211,79 @@ class MiLightController(Thread):
             if red > 256 - self.RGB_WHITE_BOUNDARY and \
                green > 256 - self.RGB_WHITE_BOUNDARY and \
                blue > 256 - self.RGB_WHITE_BOUNDARY:
-                formatter.update_color_white()
-                self.flush_packet()
+                yield formatter.update_color_white()
             else:
                 hsv = rgb_to_hsv(red, green, blue)
 
                 hue = int(round(hsv[0] * 360, 0))
                 saturation = int(round(hsv[1] * 100, 0))
 
-                formatter.update_hue(hue)
-                self.flush_packet()
-                formatter.update_saturation(saturation)
-                self.flush_packet()
+                yield formatter.update_hue(hue)
+                yield formatter.update_saturation(saturation)
 
         if "level" in request:
-            formatter.update_brightness(request["level"])
-            self.flush_packet()
+            yield formatter.update_brightness(request["level"])
 
         # HomeAssistant
         if "brightness" in request:
             scaled_brightness = rescale(int(request["brightness"]), 100, 255)
-            formatter.update_brightness(scaled_brightness)
-            self.flush_packet()
+            yield formatter.update_brightness(scaled_brightness)
 
         if "temperature" in request:
-            formatter.update_temperature(request["temperature"])
-            self.flush_packet()
+            yield formatter.update_temperature(request["temperature"])
 
         # HomeAssistant
         if "color_temp" in request:
-            formatter.update_temperature(
+            yield formatter.update_temperature(
                 mireds_to_white_val(request["color_temp"], 100)
             )
-            self.flush_packet()
 
         if "mode" in request:
-            formatter.update_mode(request["mode"])
-            self.flush_packet()
+            yield formatter.update_mode(request["mode"])
 
         # Raw packet command/args
         if "button_id" in request and "argument" in request:
-            formatter.command(request["button_id"], request["argument"])
-            self.flush_packet()
+            yield formatter.command(request["button_id"], request["argument"])
 
         # Always turn off last
         if parsed_status == OFF:
-            formatter.update_status(OFF)
-            self.flush_packet()
+            yield formatter.update_status(OFF)
 
     def handle_command(self, command):
         formatter = self.radios[self.current_radio].formatter
         if command == "unpair":
-            formatter.unpair()
+            return formatter.unpair()
         elif command == "pair":
-            formatter.pair()
+            return formatter.pair()
         elif command == "set_white":
-            formatter.update_color_white()
+            return formatter.update_color_white()
         elif command == "night_mode":
-            formatter.enable_night_mode()
+            return formatter.enable_night_mode()
         elif command == "level_up":
-            formatter.increase_brightness()
+            return formatter.increase_brightness()
         elif command == "level_down":
-            formatter.decrease_brightness()
+            return formatter.decrease_brightness()
         elif command == "temperature_up":
-            formatter.increase_temperature()
+            return formatter.increase_temperature()
         elif command == "temperature_down":
-            formatter.decrease_temperature()
+            return formatter.decrease_temperature()
         elif command == "next_mode":
-            formatter.next_mode()
+            return formatter.next_mode()
         elif command == "previous_mode":
-            formatter.previous_mode()
+            return formatter.previous_mode()
         elif command == "mode_speed_down":
-            formatter.mode_speed_down()
+            return formatter.mode_speed_down()
         elif command == "mode_speed_up":
-            formatter.mode_speed_up()
-        self.flush_packet()
+            return formatter.mode_speed_up()
 
     def handle_effect(self, effect):
         formatter = self.radios[self.current_radio].formatter
         if effect == "night_mode":
-            formatter.enable_night_mode()
+            return formatter.enable_night_mode()
         elif effect == "white" or effect == "white_mode":
-            formatter.update_color_white()
+            return formatter.update_color_white()
         else: # assume we're trying to set mode
-            formatter.update_mode(int(effect))
-        self.flush_packet()
+            return formatter.update_mode(int(effect))
 
     def parse_status(self, request):
         if "status" in request:

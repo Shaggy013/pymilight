@@ -76,6 +76,7 @@ cdef class PyPacketFormatter:
 
     def command(self, int command, int arg):
         self.c_pf_obj[0].command(command, arg)
+        return self.data()
 
     def set_held(self, bool is_held):
         self.c_pf_obj[0].setHeld(is_held)
@@ -91,64 +92,83 @@ cdef class PyPacketFormatter:
             self.c_pf_obj[0].updateStatus(milight_status, group_id)
         else:
             self.c_pf_obj[0].updateStatus(milight_status)
+        return self.data()
 
     def pair(self):
         self.c_pf_obj[0].pair()
+        return self.data()
 
     def unpair(self):
         self.c_pf_obj[0].unpair()
-
+        return self.data()
+        
     # Mode
     def update_mode(self, int value):
         self.c_pf_obj[0].updateMode(value)
+        return self.data()
 
     def mode_speed_down(self):
         self.c_pf_obj[0].modeSpeedDown()
+        return self.data()
 
     def mode_speed_up(self):
         self.c_pf_obj[0].modeSpeedUp()
+        return self.data()
 
     def next_mode(self):
         self.c_pf_obj[0].nextMode()
+        return self.data()
 
     def previous_mode(self):
         self.c_pf_obj[0].previousMode()
+        return self.data()
 
     # Color
     def update_hue(self, int value):
         self.c_pf_obj[0].updateHue(value)
+        return self.data()
 
     def update_color_raw(self, int value):
         self.c_pf_obj[0].updateColorRaw(value)
+        return self.data()
 
     def update_color_white(self):
         self.c_pf_obj[0].updateColorWhite()
+        return self.data()
 
     def update_saturation(self, int value):
         self.c_pf_obj[0].updateSaturation(value)
+        return self.data()
 
     # White temperature
     def increase_temperature(self):
         self.c_pf_obj[0].increaseTemperature()
+        return self.data()
 
     def decrease_temperature(self):
         self.c_pf_obj[0].decreaseTemperature()
+        return self.data()
 
     def update_temperature(self, int value):
         self.c_pf_obj[0].updateTemperature(value)
+        return self.data()
 
     # Brightness
     def update_brightness(self, int value):
         self.c_pf_obj[0].updateBrightness(value)
+        return self.data()
 
     def increase_brightness(self):
         self.c_pf_obj[0].increaseBrightness()
+        return self.data()
 
     def decrease_brightness(self):
         self.c_pf_obj[0].decreaseBrightness()
+        return self.data()
 
     def enable_night_mode(self):
         self.c_pf_obj[0].enableNightMode()
+        return self.data()
 
 
 cdef class PyV2PacketFormatter(PyPacketFormatter):
@@ -165,10 +185,10 @@ cdef class PyRgbCctPacketFormatter(PyV2PacketFormatter):
     def on(self):
         self.c_formatter.prepare(0x02, 1)
         self.c_formatter.updateStatus(MiLightStatus.ON, 1)
-        return self._data()
+        return self.data()
 
     def off(self):
         self.c_formatter.prepare(0x02, 1)
         self.c_formatter.updateStatus(MiLightStatus.OFF, 1)
-        return self._data()
+        return self.data()
 
