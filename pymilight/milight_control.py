@@ -301,22 +301,3 @@ class MiLightController(Thread):
         if status.lower() == "on" or status.lower() == "true":
             return ON
         return OFF
-
-
-if __name__ == '__main__':
-    import threading
-    logging.basicConfig(level=logging.DEBUG)
-    inbound = queue.Queue()
-    outbound = queue.Queue()
-    shutdown = threading.Event()
-
-    controller = MiLightController(inbound, outbound, shutdown)
-    controller.start()
-
-    inbound.put(("rgb_cct", 0x1, 1, {"status": "on"}))
-    while True:
-        if inbound.empty():
-            shutdown.set()
-            controller.join()
-            break
-        time.sleep(1)
