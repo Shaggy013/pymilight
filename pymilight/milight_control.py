@@ -3,6 +3,13 @@ import logging
 import math
 import queue
 import time
+import sys
+if sys.platform == "darwin":
+    #TODO: fixme
+    def clock_gettime(clk):
+        return time.clock()
+    time.clock_gettime = clock_gettime
+    time.CLOCK_MONOTONIC_RAW = None
 from threading import Thread
 
 import RF24
