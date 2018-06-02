@@ -1,6 +1,7 @@
 # distutils: language=c++
 # distutils: sources = vendor/RGBConverter/RGBConverter.cpp
-from pymilight.packet_formatter.packet_formatter cimport byte
+
+ctypedef unsigned char byte
 
 cdef extern from "RGBConverter/RGBConverter.h":
     cdef cppclass RGBConverter:

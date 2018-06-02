@@ -9,8 +9,10 @@
 
 typedef uint8_t byte;
 
+#ifdef PYMILIGHT_NEED_MINMAX
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
+#endif
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 //#define millis() (unsigned long)(((float)clock())/CLOCKS_PER_SEC / 1000)

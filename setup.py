@@ -14,6 +14,9 @@ extensions = [
         "pymilight.rgb_converter",
         ["pymilight/rgb_converter.pyx"],
         include_dirs=include_dirs,
+        define_macros=[
+            ('PYMILIGHT_NEED_MINMAX', '1')
+        ],
     ),
 ]
 
