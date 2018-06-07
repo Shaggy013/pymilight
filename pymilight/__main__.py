@@ -38,10 +38,25 @@ def main(args=None):
     def mqtt_to_queue(device_type, device_id, group_id, msg):
         inbound.put((device_type, device_id, group_id, msg))
 
+    def mqtt_publish(shutdown, outbound, mqtt_client):
+        while True:
+            if shutdown.is_set():
+                break
+            try:
+                dtype, did, gid, value = outbound.get(timeout=2)
+                mqtt_client.send_update(dtype, did, gid, json.dumps(value))
+                outbound.task_done()
+            except queue.Empty:
+                pass
+
     mqtt_client = MqttClient(config, mqtt_to_queue)
 
     controller = MiLightController(inbound, outbound, shutdown)
     controller.start()
+    controller.set_current_radio("rgb_cct")
+
+    mqtt_publish = threading.Thread(target=mqtt_publish, args=(shutdown, outbound, mqtt_client))
+    mqtt_publish.start()
 
     while True:
         key = input("Press q to quit:")

@@ -64,6 +64,7 @@ class MiLightController(Thread):
         self.radios = {
             name: NRF24MiLightRadio(rf, radio_config)
             for name, radio_config in MiLightRadioConfig.ALL_RADIOS.items()
+            if name == 'rgb_cct'
         }
 
         formatter = PyRgbCctPacketFormatter()
