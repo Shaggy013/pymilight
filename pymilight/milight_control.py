@@ -89,36 +89,21 @@ class MiLightController(Thread):
 
             # Handle recieved radio packets.
             try:
-                state_message = self.process_radio()
+                self.process_radio()
             except Exception as err:
                 LOGGER.critical("Error recieveing from radio: %s", err)
-            if state_message:
-                self.outbound_queue.put(state_message)
 
-            time.sleep(0.5)
+            time.sleep(0.1)
 
     def process_radio(self):
-        """TODO
-        bool MiLightClient::available() {
-          if (currentRadio == NULL) {
-            return false
-          }
+        radio = self.radios[self.current_radio]
 
-          return currentRadio->available()
-        }
-
-        size_t MiLightClient::read(uint8_t packet[]) {
-          if (currentRadio == NULL) {
-            return 0
-          }
-
-          size_t length
-          currentRadio->read(packet, length)
-
-          return length
-        }
-        """
-        return None
+        if radio.available():
+            while radio.available():
+                packet = radio.read(9)
+                parsed = radio.formatter.parse(packet)
+                print(parsed)
+                self.outbound_queue.put(parsed)
 
     def process_command(self, command):
         device_type, device_id, group_id, msg = command

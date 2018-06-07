@@ -13,7 +13,7 @@ from .rgb_cct_packet_formatter cimport RgbCctPacketFormatter
 
 
 cdef extern from "utils.h":
-    cdef string ParsePacket(PacketFormatter formatter, unsigned char *packet)
+    cdef bool ParsePacket(PacketFormatter formatter, unsigned char *packet, string *device_type, int *device_id, int *group_id, string *message)
 
 
 cdef class PyPacketStream:
@@ -71,8 +71,11 @@ cdef class PyPacketFormatter:
     def parse(self, bytearray packet):
         cdef unsigned char *packet_array = packet
         cdef string raw_json
-        raw_json = ParsePacket(self.c_pf_obj[0], packet)
-        return json.loads(raw_json.decode('utf-8'))
+        cdef int device_id
+        cdef int group_id
+        cdef string device_type
+        ParsePacket(self.c_pf_obj[0], packet, &device_type, &device_id, &group_id, &raw_json)
+        return (device_type.decode('utf-8'), device_id, group_id, json.loads(raw_json.decode('utf-8')))
 
     def command(self, int command, int arg):
         self.c_pf_obj[0].command(command, arg)

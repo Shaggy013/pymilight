@@ -9,5 +9,5 @@
 
 using json = nlohmann::json;
 
-std::string ParsePacket(PacketFormatter &formatter, const uint8_t *packet);
+bool ParsePacket(PacketFormatter &formatter, const uint8_t *packet, std::string *device_type, int *device_id, int *group_id, std::string *message);
 #endif
