@@ -7,7 +7,7 @@ from pymilight.packet_formatter import PyRgbCctPacketFormatter
 class MiLightControllerTestCase(unittest.TestCase):
     def build_mocked_controller(self):
         formatter = PyRgbCctPacketFormatter()
-        controller = MiLightController(None, None, None)
+        controller = MiLightController(None, None, None, True)
         controller.radios = {
             "rgb_cct": unittest.mock.MagicMock()
         }
