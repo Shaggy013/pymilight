@@ -51,7 +51,7 @@ def main(args=None):
 
     mqtt_client = MqttClient(config, mqtt_to_queue)
 
-    controller = MiLightController(inbound, outbound, shutdown)
+    controller = MiLightController(inbound, outbound, shutdown, True)
     controller.start()
     controller.set_current_radio("rgb_cct")
 

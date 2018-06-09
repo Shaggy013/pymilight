@@ -42,14 +42,20 @@ def mireds_to_white_val(mireds, max_val=255):
     )
 
 
+def white_val_to_mireds(value, max_val=255):
+    scaled = rescale(value, (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS), maxValue)
+    return COLOR_TEMP_MIN_MIREDS + scaled
+
+
 class MiLightController(Thread):
     DEFAULT_RESEND_COUNT = 10
     RGB_WHITE_BOUNDARY = 40
-    def __init__(self, inbound_queue, outbound_queue, shutdown_event, *args, **kwargs):
+    def __init__(self, inbound_queue, outbound_queue, shutdown_event, dry_run, *args, **kwargs):
         super(MiLightController, self).__init__(*args, **kwargs)
         self.inbound_queue = inbound_queue
         self.outbound_queue = outbound_queue
         self.shutdown_event = shutdown_event
+        self.dry_run = dry_run
 
         self.base_resend_count = MiLightController.DEFAULT_RESEND_COUNT
         self.current_resend_count = self.base_resend_count
@@ -157,7 +163,11 @@ class MiLightController(Thread):
 
     def flush_packet(self, packet):
         self.update_resend_count()
-        self.write(packet)
+        if self.dry_run:
+            LOGGER.critical(packet.hex())
+        else:
+            self.write(packet)
+
 
     def update(self, request):
         for packet in self.request_to_packets(request):
