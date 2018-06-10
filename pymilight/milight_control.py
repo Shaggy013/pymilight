@@ -43,7 +43,7 @@ def mireds_to_white_val(mireds, max_val=255):
 
 
 def white_val_to_mireds(value, max_val=255):
-    scaled = rescale(value, (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS), maxValue)
+    scaled = rescale(value, (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS), max_val)
     return COLOR_TEMP_MIN_MIREDS + scaled
 
 

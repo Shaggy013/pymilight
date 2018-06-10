@@ -118,6 +118,8 @@ class State:
 
     @property
     def hue(self):
+        if self._hue is None:
+            return None
         return rescale(self._hue, 360, 255)
 
     @hue.setter
@@ -158,6 +160,8 @@ class State:
 
     @property
     def mireds(self):
+        if self._kelvin is None:
+            return None
         return white_val_to_mireds(self._kelvin, 100)
 
     @mireds.setter
@@ -337,6 +341,6 @@ class State:
         if self.kelvin is not None and field == "kelvin" and self.bulb_mode == BULB_MODE_WHITE:
             partial_state["kelvin"] = self.kelvin
 
-    def apply_state(self, partial_state, fields):
+    def apply_state(self, partial_state, fields=FIELD_NAMES):
         for field in fields:
             self.apply_field(partial_state, field)

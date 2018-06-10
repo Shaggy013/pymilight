@@ -22,8 +22,8 @@ def rgb_to_hsv(int red, int green, int blue):
     converter.rgbToHsv(red, green, blue, hsv)
     return list(hsv)
 
-def hsv_to_rgb(int hue, int saturation, int value):
+def hsv_to_rgb(float hue, float saturation, float value):
     cdef byte rgb[3]
     cdef RGBConverter converter
     converter.hsvToRgb(hue, saturation, value, rgb)
-    return list(rgb)
+    return (rgb[0], rgb[1], rgb[2])
