@@ -1,7 +1,7 @@
 import json
 
 from pymilight.rgb_converter import hsv_to_rgb
-from pymilight.milight_control import white_val_to_mireds, mireds_to_white_val, rescale
+from pymilight.utils import white_val_to_mireds, mireds_to_white_val, rescale
 
 
 FIELD_NAMES = [

@@ -17,45 +17,25 @@ import RF24
 from pymilight.radio import NRF24MiLightRadio, MiLightRadioConfig
 from pymilight.packet_formatter import PyRgbCctPacketFormatter
 from pymilight.rgb_converter import rgb_to_hsv
+from pymilight.state_store import StateStore
+from pymilight.utils import constrain, rescale, mireds_to_white_val
 
 LOGGER = logging.getLogger(__name__)
 ON = True
 OFF = False
-# MiLight CCT bulbs range from 2700K-6500K, or ~370.3-153.8 mireds.
-COLOR_TEMP_MAX_MIREDS = 370
-COLOR_TEMP_MIN_MIREDS = 153
-
-
-def constrain(val, min_val, max_val):
-    return min(max_val, max(min_val, val))
-
-
-def rescale(val, new_max, old_max):
-    return round(val * (new_max / float(old_max)))
-
-
-def mireds_to_white_val(mireds, max_val=255):
-    return rescale(
-        constrain(mireds, COLOR_TEMP_MIN_MIREDS, COLOR_TEMP_MAX_MIREDS) - COLOR_TEMP_MIN_MIREDS,
-        max_val,
-        (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS)
-    )
-
-
-def white_val_to_mireds(value, max_val=255):
-    scaled = rescale(value, (COLOR_TEMP_MAX_MIREDS - COLOR_TEMP_MIN_MIREDS), max_val)
-    return COLOR_TEMP_MIN_MIREDS + scaled
 
 
 class MiLightController(Thread):
     DEFAULT_RESEND_COUNT = 10
     RGB_WHITE_BOUNDARY = 40
+
     def __init__(self, inbound_queue, outbound_queue, shutdown_event, dry_run, *args, **kwargs):
         super(MiLightController, self).__init__(*args, **kwargs)
         self.inbound_queue = inbound_queue
         self.outbound_queue = outbound_queue
         self.shutdown_event = shutdown_event
         self.dry_run = dry_run
+        self.store = StateStore("tmp")
 
         self.base_resend_count = MiLightController.DEFAULT_RESEND_COUNT
         self.current_resend_count = self.base_resend_count
@@ -94,11 +74,11 @@ class MiLightController(Thread):
             except Exception as err:
                 LOGGER.critical("Failed to process command: %s. Error was %s.", command, err)
 
-            # Handle recieved radio packets.
+            # Handle received radio packets.
             try:
                 self.process_radio()
             except Exception as err:
-                LOGGER.critical("Error recieveing from radio: %s", err)
+                LOGGER.critical("Error receiveing from radio: %s", err)
 
             time.sleep(0.1)
 
@@ -110,13 +90,24 @@ class MiLightController(Thread):
                 packet = radio.read(9)
                 parsed = radio.formatter.parse(packet)
                 print(parsed)
-                self.outbound_queue.put(parsed)
+                #self.outbound_queue.put(parsed)
 
     def process_command(self, command):
         device_type, device_id, group_id, msg = command
 
+        self.send_radio_command(device_type, device_id, group_id, msg)
+        self.send_state_update(device_type, device_id, group_id, msg)
+
+    def send_radio_command(self, device_type, device_id, group_id, msg):
         self.set_bulb(device_type, device_id, group_id)
         self.update(msg)
+
+    def send_state_update(self, device_type, device_id, group_id, msg):
+        state = self.store[(device_type, device_id, group_id)]
+        state.patch(msg)
+        state_vals = {}
+        state.apply_fields(state_vals)
+        self.outbound_queue.put((device_type, device_id, group_id, state_vals))
 
     def set_bulb(self, device_type, device_id, group_id):
         self.set_current_radio(device_type)

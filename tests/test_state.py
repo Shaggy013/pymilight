@@ -85,7 +85,7 @@ class MiLightStateTestCase(unittest.TestCase):
         state = State()
         state.state = True
         state.bulb_mode = BULB_MODE_WHITE
-        state.kelvin = 355
+        state.kelvin = 6000
 
         result = {}
         state.apply_state(result)
@@ -95,6 +95,6 @@ class MiLightStateTestCase(unittest.TestCase):
             "color": {"b": 255, "g": 255, "r": 255},
             "bulb_mode": "white",
             "effect": 'white_mode',
-            "color_temp": 923,
-            "kelvin": 355
+            "color_temp": 167,
+            "kelvin": 6000
         }, result)
