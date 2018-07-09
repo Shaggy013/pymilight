@@ -16,7 +16,7 @@ def rescale(val, new_max, old_max):
 
 def mireds_to_white_val(mireds):
     val = COLOR_TEMP_RANGE_MIREDS - (mireds - COLOR_TEMP_MIN_MIREDS)
-    return int(round(val / float(COLOR_TEMP_RANGE_MIREDS) * 100.0, 0))
+    return constrain(int(round(val / float(COLOR_TEMP_RANGE_MIREDS) * 100.0, 0)), 0, 100)
 
 
 def white_val_to_mireds(value):
