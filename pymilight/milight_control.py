@@ -106,7 +106,7 @@ class MiLightController(Thread):
         state = self.store[(device_type, device_id, group_id)]
         state.patch(msg)
         state_vals = {}
-        state.apply_fields(state_vals)
+        state.apply_state(state_vals)
         self.outbound_queue.put((device_type, device_id, group_id, state_vals))
 
     def set_bulb(self, device_type, device_id, group_id):

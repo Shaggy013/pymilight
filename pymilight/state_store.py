@@ -27,6 +27,6 @@ class StateStore:
             path = os.path.join(self.persist_root, "{0}-{1}-{2}.json".format(*key))
             with open(path, 'w') as fobj:
                 vals = {}
-                self._states[key].apply_fields(vals)
+                self._states[key].apply_state(vals)
                 self._states[key].clear_dirty()
                 json.dump(vals, fobj)
