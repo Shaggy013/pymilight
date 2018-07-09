@@ -1,7 +1,7 @@
 import json
 
 from pymilight.rgb_converter import hsv_to_rgb
-from pymilight.utils import white_val_to_mireds, mireds_to_white_val, rescale
+from pymilight.utils import white_val_to_mireds, mireds_to_white_val, white_val_to_kelvin, kelvin_to_white_val, rescale
 
 
 FIELD_NAMES = [
@@ -56,7 +56,7 @@ class State:
         self._saturation = None
         self._mode = None
         self._bulb_mode = None
-        self._kelvin = None
+        self._white_val = None # 0 - 100, warm to cold
         self._night_mode = None
 
         self._dirty = 1
@@ -71,7 +71,7 @@ class State:
             "_saturation",
             "_mode",
             "_bulb_mode",
-            "_kelvin",
+            "_white_val",
             "_night_mode",
             "_dirty",
             "_mqtt_dirty",
@@ -151,23 +151,25 @@ class State:
 
     @property
     def kelvin(self):
-        return self._kelvin
+        if self._white_val is None:
+            return None
+        return white_val_to_kelvin(self._white_val)
 
     @kelvin.setter
     def kelvin(self, value):
         self.set_dirty()
-        self._kelvin = value
+        self._white_val = kelvin_to_white_val(value)
 
     @property
     def mireds(self):
-        if self._kelvin is None:
+        if self._white_val is None:
             return None
-        return white_val_to_mireds(self._kelvin, 100)
+        return white_val_to_mireds(self._white_val)
 
     @mireds.setter
     def mireds(self, value):
         self.set_dirty()
-        self._kelvin = mireds_to_white_val(value, 100)
+        self._white_val = mireds_to_white_val(value)
 
     @property
     def bulb_mode(self):

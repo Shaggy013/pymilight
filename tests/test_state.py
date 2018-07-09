@@ -17,11 +17,11 @@ class MiLightStateTestCase(unittest.TestCase):
             "_night_mode": None,
             "_bulb_mode": None,
             "_state": True,
-            "_kelvin": None,
             "_dirty": True,
             "_mqtt_dirty": True,
             "_hue": None,
             "_brightness": None,
+            "_white_val": None,
         }, json.loads(dumped))
 
         state2 = State()
@@ -85,7 +85,7 @@ class MiLightStateTestCase(unittest.TestCase):
         state = State()
         state.state = True
         state.bulb_mode = BULB_MODE_WHITE
-        state.kelvin = 6000
+        state.mireds = 370
 
         result = {}
         state.apply_state(result)
@@ -95,6 +95,6 @@ class MiLightStateTestCase(unittest.TestCase):
             "color": {"b": 255, "g": 255, "r": 255},
             "bulb_mode": "white",
             "effect": 'white_mode',
-            "color_temp": 167,
-            "kelvin": 6000
+            "color_temp": 370,
+            "kelvin": 2700
         }, result)

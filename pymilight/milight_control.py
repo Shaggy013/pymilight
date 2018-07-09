@@ -159,7 +159,6 @@ class MiLightController(Thread):
         else:
             self.write(packet)
 
-
     def update(self, request):
         for packet in self.request_to_packets(request):
             self.flush_packet(packet)
@@ -227,7 +226,7 @@ class MiLightController(Thread):
         # HomeAssistant
         if "color_temp" in request:
             yield formatter.update_temperature(
-                mireds_to_white_val(request["color_temp"], 100)
+                mireds_to_white_val(request["color_temp"])
             )
 
         if "mode" in request:

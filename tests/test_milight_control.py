@@ -41,7 +41,7 @@ class MiLightControllerTestCase(unittest.TestCase):
             [
                 "00dbe12166d1ba66cc",
                 "00dbe1216494bb667e",
-                "00dbe1216494b8667b",
+                "00dbe121643cb86623",
             ]
         )
         
