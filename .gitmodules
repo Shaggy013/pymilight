@@ -1,3 +1,6 @@
 [submodule "vendor/RGBConverter"]
 	path = vendor/RGBConverter
 	url = https://github.com/ratkins/RGBConverter.git
+[submodule "vendor/json"]
+	path = vendor/json
+	url = https://github.com/nlohmann/json.git
