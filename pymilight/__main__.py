@@ -14,6 +14,9 @@ def get_parser():
     parser.add_argument("--config", "-c", 
                         help="Path to config file", 
                         default="config.json")
+    parser.add_argument("--interactive", "-i",
+                        help="Run in interactive mode",
+                        action="store_true")
     return parser
 
 
@@ -28,7 +31,8 @@ def main(args=None):
         print()
         print(err)
         return False
-        
+    interactive = args.interactive
+
     logging.basicConfig(level=logging.DEBUG)
 
     inbound = queue.Queue()
@@ -59,11 +63,12 @@ def main(args=None):
     mqtt_publish.start()
 
     while True:
-        key = input("Press q to quit:")
-        if key.lower().startswith("q"):
-            shutdown.set()
-            controller.join()
-            break
+        if interactive:
+            key = input("Press q to quit:")
+            if key.lower().startswith("q"):
+                shutdown.set()
+                controller.join()
+                break
         time.sleep(1)
 
 
